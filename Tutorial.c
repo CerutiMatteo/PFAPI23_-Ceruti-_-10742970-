@@ -33,9 +33,9 @@ int main() {
                     add_car(highway, distance, autonomy);
                     car = strtok(NULL, " ");
                 }
-                printf("Station added successfully\n");
+                printf("aggiunta\n");//printf("Station added successfully\n");
             } else {
-                printf("Station already exists\n");
+                printf("non aggiunta\n");//printf("Station already exists\n");
             }
         }
 
@@ -53,9 +53,9 @@ int main() {
         else if (strcmp(command, "aggiungi-auto") == 0 && num_read >= 3) {
             int success = add_car(highway, distance, num_cars);
             if (success) {
-                printf("Car added successfully at distance %d with autonomy of %d\n", distance, num_cars);
+                printf("aggiunta\n");//printf("Car added successfully at distance %d with autonomy of %d\n", distance, num_cars);
             } else {
-                printf("Failed to add car\n");
+                printf("non aggiunta\n");//printf("Failed to add car\n");
             }
             continue;
         } 
@@ -79,7 +79,9 @@ int main() {
                 printf("nessun percorso\n");
             }else{
                 for (int i = 0; i <= num_stations; i++) {
-                printf("%d ", route[i]);
+                    if((route[i]>= distance && route[i]<= num_cars) || (route[i]<= distance && route[i]>= num_cars)){
+                        printf("%d ", route[i]);
+                    }
             }
             printf("\n");
             }

@@ -29,6 +29,7 @@ int dequeue(Queue *queue);
 Graph *init_highway();
 int add_station(Graph *highway, int distance);
 void check_and_create_edges(Graph *highway, Station *new_station);
+void your_edges(Graph *highway, Station *new_station);
 int get_max_car (Station *station);
 int edge_exists(Station *station, Station * target);
 int lower_bound(Station *stations, int numStations, int value);
@@ -38,6 +39,9 @@ int scrap_car(Graph *highway, int distance, int autonomy);
 int* plan_route(Graph *highway, int start, int end, int* num_stations);
 int delete_station(Graph *highway, int distance);
 int delete_car(Graph *highway, int distance, int autonomy);
+void sort_edges(Station *station, int n, int forward);
+void printQueue(const Queue* queue);
+int index_of_a_distance(Graph *highway, int distance);
 
 // HELPER
 int find_station_index(Graph* highway, int distance) {
@@ -115,21 +119,38 @@ void check_and_create_edges(Graph *highway, Station *new_station) {
     for (i = 0; i < highway->numStations; i++) {
         int max_car = get_max_car(&highway->stations[i]);
         if (max_car >= abs(new_station->distance - highway->stations[i].distance) &&
-            highway->stations[i].index != new_station->index) {
-            if (new_station->distance > highway->stations[i].distance &&
-                !edge_exists(&highway->stations[i], new_station)) {
+            highway->stations[i].index != new_station->index && !edge_exists(&highway->stations[i], new_station)) {
+            if (new_station->distance > highway->stations[i].distance) {
                 highway->stations[i].num_forward_edges++;
                 highway->stations[i].forward_edges = realloc(highway->stations[i].forward_edges, highway->stations[i].num_forward_edges * sizeof(Station));
                 highway->stations[i].forward_edges[highway->stations[i].num_forward_edges - 1] = *new_station;
-            } else if (new_station->distance < highway->stations[i].distance &&
-                       !edge_exists(&highway->stations[i], new_station)) {
+            } else if (new_station->distance < highway->stations[i].distance) {
                 highway->stations[i].num_backward_edges++;
                 highway->stations[i].backward_edges = realloc(highway->stations[i].backward_edges, highway->stations[i].num_backward_edges * sizeof(Station));
                 highway->stations[i].backward_edges[highway->stations[i].num_backward_edges - 1] = *new_station;
             }
         }
     }
+    int max_car_new = get_max_car(new_station);
+    for (i = 0; i < highway->numStations; i++) {
+        if (max_car_new >= abs(new_station->distance - highway->stations[i].distance) &&
+            new_station->index != highway->stations[i].index && !edge_exists(new_station, &highway->stations[i])) {
+            if (new_station->distance < highway->stations[i].distance) {
+                // Aggiungi arco forward a new_station
+                new_station->num_forward_edges++;
+                new_station->forward_edges = realloc(new_station->forward_edges, new_station->num_forward_edges * sizeof(Station));
+                new_station->forward_edges[new_station->num_forward_edges - 1] = highway->stations[i];
+            } else if (new_station->distance > highway->stations[i].distance) {
+                // Aggiungi arco backward a new_station
+                new_station->num_backward_edges++;
+                new_station->backward_edges = realloc(new_station->backward_edges, new_station->num_backward_edges * sizeof(Station));
+                new_station->backward_edges[new_station->num_backward_edges - 1] = highway->stations[i];
+            }
+        }
+    }
+    
 }
+
 
 int add_station(Graph *highway, int distance) {
     int i;
@@ -158,8 +179,8 @@ int add_station(Graph *highway, int distance) {
     highway->stations[i].num_cars = 0;
     highway->stations[i].num_forward_edges = 0;
     highway->stations[i].num_backward_edges = 0;
-    highway->stations[i].forward_edges = malloc(sizeof(Station));
-    highway->stations[i].backward_edges = malloc(sizeof(Station));
+    highway->stations[i].forward_edges = NULL;//malloc(sizeof(Station));
+    highway->stations[i].backward_edges = NULL;//malloc(sizeof(Station));
 
     // Check and create edges for the new station
     check_and_create_edges(highway, &highway->stations[i]);
@@ -179,18 +200,39 @@ int get_max_car (Station *station) {
     return max;
 }
 
-int edge_exists(Station *station, Station *check_station) {
+int edge_exists(Station *station, Station *check_station) {//ATTENZIONE
     for (int i = 0; i < station->num_forward_edges; i++) {
-        if (&station->forward_edges[i] == check_station) {
+        if (station->forward_edges[i].distance == check_station->distance) {
             return 1;
         }
     }
     for (int i = 0; i < station->num_backward_edges; i++) {
-        if (&station->backward_edges[i] == check_station) {
+        if (station->backward_edges[i].distance == check_station->distance) {
             return 1;
         }
     }
     return 0;
+}
+
+void sort_edges(Station *station, int n, int forward){
+    int temp=0;
+    for(int i=0; i<n-1; i++){
+        for(int j=i+1; j<n; j++){
+            if(forward){
+                if(station->forward_edges[i].distance > station->forward_edges[j].distance){
+                    temp= station->forward_edges[i].distance;
+                    station->forward_edges[i].distance= station->forward_edges[j].distance;
+                    station->forward_edges[j].distance= temp;
+                }
+            }else{
+                if(station->backward_edges[i].distance > station->backward_edges[j].distance){
+                    temp= station->backward_edges[i].distance;
+                    station->backward_edges[i].distance= station->backward_edges[j].distance;
+                    station->backward_edges[j].distance= temp;
+                }
+            }
+        }
+    }
 }
 
 int lower_bound(Station *stations, int numStations, int value) {
@@ -347,7 +389,7 @@ int add_car(Graph *highway, int distance, int car) {
     for (i = 0; i < highway->numStations; i++) {
         if (highway->stations[i].distance == distance) {
             if (highway->stations[i].num_cars == MAX_CARS) {
-                return 0;
+                return 0;//quando la stazione ha 512 macchine 
             }
             highway->stations[i].cars[highway->stations[i].num_cars] = car;
             highway->stations[i].num_cars++;
@@ -356,24 +398,26 @@ int add_car(Graph *highway, int distance, int car) {
 
             // If the added car is the new max car, update the edges
             if (car == max_car) {
+                // Memorizza la stazione con la nuova macchina
+                Station *new_station = &highway->stations[i];
 
                 for (int j = 0; j < highway->numStations; j++) {
-                    if (highway->stations[j].distance != distance &&
-                        max_car >= abs(distance - highway->stations[j].distance) &&
-                        !edge_exists(&highway->stations[i], &highway->stations[j])) {
-                        if (highway->stations[j].distance > distance) {
-                            highway->stations[i].forward_edges = realloc(highway->stations[i].forward_edges, (highway->stations[i].num_forward_edges + 1) * sizeof(Station));
-                            highway->stations[i].forward_edges[highway->stations[i].num_forward_edges] = highway->stations[j];
-                            highway->stations[i].num_forward_edges++;
-                        } else {
-                            highway->stations[i].backward_edges = realloc(highway->stations[i].backward_edges, (highway->stations[i].num_backward_edges + 1) * sizeof(Station));
-                            highway->stations[i].backward_edges[highway->stations[i].num_backward_edges] = highway->stations[j];
-                            highway->stations[i].num_backward_edges++;
+                    if (car >= abs(new_station->distance - highway->stations[j].distance) &&
+                        new_station->index != highway->stations[j].index && !edge_exists(new_station, &highway->stations[j])) {
+                        if (new_station->distance < highway->stations[j].distance) {
+                            // Aggiungi arco forward a new_station
+                            new_station->num_forward_edges++;
+                            new_station->forward_edges = realloc(new_station->forward_edges, new_station->num_forward_edges * sizeof(Station));
+                            new_station->forward_edges[new_station->num_forward_edges - 1] = highway->stations[j];
+                        } else if (new_station->distance > highway->stations[j].distance) {
+                            // Aggiungi arco backward a new_station
+                            new_station->num_backward_edges++;
+                            new_station->backward_edges = realloc(new_station->backward_edges, new_station->num_backward_edges * sizeof(Station));
+                            new_station->backward_edges[new_station->num_backward_edges - 1] = highway->stations[j];
                         }
                     }
                 }
             }
-
             return 1;
         }
     }
@@ -381,15 +425,23 @@ int add_car(Graph *highway, int distance, int car) {
 }
 
 int* plan_route(Graph* highway, int start_distance, int end_distance, int *num_stations) {
+    
+    for(int i=0; i<highway->numStations; i++){
+        sort_edges(&highway->stations[i],highway->stations[i].num_forward_edges,1);
+        sort_edges(&highway->stations[i],highway->stations[i].num_backward_edges,0);
+        //printf("%d->%d   ",highway->stations[i].distance,highway->stations[i].index);
+    }
+
     // Convert distances to indices
     int start = find_station_index(highway, start_distance);
+    printf("%d\n",start);
     int end = find_station_index(highway, end_distance);
-
-    if (start == -1 || end == -1) {
+    printf("%d\n",end);
+    if (start == -1 || end == -1 || start==end) {
         // One of the stations was not found
-        printf("nessun percorso");
         return NULL;
     }
+    
 
     // Initialize visited array and previous node array
     int* visited = (int*)malloc(highway->numStations * sizeof(int));
@@ -402,6 +454,7 @@ int* plan_route(Graph* highway, int start_distance, int end_distance, int *num_s
     // Create a queue and enqueue the start node
     Queue* queue = createQueue();
     enqueue(queue, start);
+    printQueue(queue);
     visited[start] = 1;
 
     // Determine the direction of the travel
@@ -413,20 +466,24 @@ int* plan_route(Graph* highway, int start_distance, int end_distance, int *num_s
         // Determine the edges to use based on the direction
         Station* edges = forward ? highway->stations[current].forward_edges : highway->stations[current].backward_edges;
         int num_edges = forward ? highway->stations[current].num_forward_edges : highway->stations[current].num_backward_edges;
-
+        
         // Iterate through all edges from the current station
         for (int i = 0; i < num_edges; i++) {
-            Station* edge = &edges[i];
-
+            int ind= index_of_a_distance(highway, edges[i].distance);//PER RICAVARE CORRETTAMENTE L'INDICE DI UNA STAZIONE LA CUI DISTANZA è NOTA
             // If the station hasn't been visited yet
-            if (!visited[edge->index]) {
-                enqueue(queue, edge->index);
-                visited[edge->index] = 1;
-                prev[edge->index] = current;
+            if (visited[ind]==0) {
+                //printf("sto visitando la stazione %d\n", edges[i].distance);
+                enqueue(queue, ind);
+                //printQueue(queue);
+                
+                visited[ind] = 1;
+                prev[ind] = current;
+                printf("stazione precedente: %d\n",highway->stations[current].distance);
                 *num_stations = *num_stations + 1;
 
                 // If we have reached the end station
-                if (edge->index == end) {
+                if (ind == end) {
+
                     free(queue);
                     free(visited);
 
@@ -456,3 +513,27 @@ int* plan_route(Graph* highway, int start_distance, int end_distance, int *num_s
 }
 
 
+void printQueue(const Queue* queue) {
+    if (queue == NULL || queue->values == NULL || queue->size == 0) {
+        printf("La coda è vuota.\n");
+        return;
+    }
+
+    printf("Contenuto della coda: ");
+    for (int i = 0; i < queue->size; i++) {
+        printf("%d ", queue->values[i]);
+    }
+    printf("\n");
+}
+
+int index_of_a_distance(Graph *highway, int distance){
+    for(int i=0; i< highway->numStations; i++){
+        if(highway->stations[i].distance==distance){
+            return i;
+        }
+    }
+    return -1;
+}
+
+//SISTEMARE GLI INDICI 
+//SISTEMARE IL RIORDINAMENTO DEGLI ARRAY DEGLI ARCHI 
