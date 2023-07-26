@@ -1,7 +1,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include "tutorial.h"
+#include "Tutorial.h"
 
 
 int main() {
@@ -9,11 +9,14 @@ int main() {
 
     char *line = NULL;
     size_t len = 0;
+    
+    //CICLO
     while (getline(&line, &len, stdin) != -1) {
         char command[20];
         int distance, num_cars;
         int num_read = sscanf(line, "%s %d %d", command, &distance, &num_cars);
 
+        //AGGIUNGI STAZIONE
         if (strcmp(command, "aggiungi-stazione") == 0 && num_read >= 3) {
             char *autonomies = strchr(line, '\n');
             if (autonomies != NULL) {
@@ -34,28 +37,56 @@ int main() {
             } else {
                 printf("Station already exists\n");
             }
-        } else if (strcmp(command, "demolisci-stazione") == 0 && num_read >= 2) {
-            // Implement the demolish_station function
+        }
+
+        //DEMOLISCI STAZIONE
+        else if (strcmp(command, "demolisci-stazione") == 0 && num_read >= 2) {
+            if(delete_station(highway, distance)){
+                printf("demolita\n");
+            }else{
+                printf("non demolita\n");
+            }
             continue;
-        } else if (strcmp(command, "aggiungi-auto") == 0 && num_read >= 3) {
+        } 
+        
+        //AGGIUNGI AUTO 
+        else if (strcmp(command, "aggiungi-auto") == 0 && num_read >= 3) {
             int success = add_car(highway, distance, num_cars);
             if (success) {
                 printf("Car added successfully at distance %d with autonomy of %d\n", distance, num_cars);
             } else {
                 printf("Failed to add car\n");
             }
-        } else if (strcmp(command, "rottama-auto") == 0 && num_read >= 3) {
-            // Implement the scrap_car function
             continue;
-        } else if (strcmp(command, "pianifica-percorso") == 0) {
+        } 
+
+        //ROTTAMA AUTO
+        else if (strcmp(command, "rottama-auto") == 0 && num_read >= 3) {
+            if(delete_car(highway, distance, num_cars)){
+                printf("rottamata\n");
+            }
+            else{
+                printf("non rottamata\n");
+            }
+            continue;
+        } 
+        
+        //PIANIFICA PERCORSO
+        else if (strcmp(command, "pianifica-percorso") == 0) {
             int num_stations = 0;
             int *route = plan_route(highway, distance, num_cars, &num_stations);
-            for (int i = 0; i < num_stations; i++) {
+            if(route== NULL){
+                printf("nessun percorso\n");
+            }else{
+                for (int i = 0; i <= num_stations; i++) {
                 printf("%d ", route[i]);
             }
             printf("\n");
+            }
+        }
 
-        } else if (strcmp(command, "printa-grafo") == 0){
+        //PRINTA GRAFO
+        else if (strcmp(command, "printa-grafo") == 0){
             print_graph(highway);
         } else {
             printf("Unknown command: %s\n", command);

@@ -387,6 +387,7 @@ int* plan_route(Graph* highway, int start_distance, int end_distance, int *num_s
 
     if (start == -1 || end == -1) {
         // One of the stations was not found
+        printf("nessun percorso");
         return NULL;
     }
 
@@ -432,7 +433,7 @@ int* plan_route(Graph* highway, int start_distance, int end_distance, int *num_s
                     // Create a list to store the path
                     int* path = (int*)malloc((*num_stations) * sizeof(int));
                     int current_station = end;
-                    int path_index = *num_stations - 1;
+                    int path_index = *num_stations;
 
                     // Follow the path from the end to the start
                     while (current_station != -1) {
