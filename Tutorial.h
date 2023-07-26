@@ -478,7 +478,7 @@ int* plan_route(Graph* highway, int start_distance, int end_distance, int *num_s
                 
                 visited[ind] = 1;
                 prev[ind] = current;
-                printf("stazione precedente: %d\n",highway->stations[current].distance);
+                //printf("stazione precedente: %d\n",highway->stations[current].distance);
                 *num_stations = *num_stations + 1;
 
                 // If we have reached the end station
