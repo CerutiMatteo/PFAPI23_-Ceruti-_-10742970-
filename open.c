@@ -122,7 +122,17 @@ Graph *init_highway() {
 void check_and_create_edges(Graph *highway, Station *new_station) {
     int i;
     for (i = 0; i < highway->numStations; i++) {
+        if(highway->stations[i].distance==616 && new_station->distance==550){
+            printf("616->");
+        }
         int max_car = get_max_car(&highway->stations[i]);
+        if(highway->stations[i].distance==616 && new_station->distance==550){
+            printf("%d",max_car);
+            printf(" dista: %d",abs(new_station->distance - highway->stations[i].distance));
+            printf("\n indici: %d %d",highway->stations[i].index, new_station->index);
+            printf("\n esiste: %d",edge_exists(&highway->stations[i], new_station));
+        }
+        
         if (max_car >= abs(new_station->distance - highway->stations[i].distance) &&
             highway->stations[i].index != new_station->index && !edge_exists(&highway->stations[i], new_station)) {
             if (new_station->distance > highway->stations[i].distance) {
@@ -281,7 +291,7 @@ int delete_station(Graph *highway, int distance) {
 
         // Check forward edges
         for (int j = 0; j < highway->stations[i].num_forward_edges; j++) {
-            if (highway->stations[i].forward_edges[j].index == index) {
+            if (highway->stations[i].forward_edges[j].distance == distance) {
                 // Shift all edges after the current one to the left
                 for (int k = j; k < highway->stations[i].num_forward_edges - 1; k++) {
                     highway->stations[i].forward_edges[k] = highway->stations[i].forward_edges[k + 1];
@@ -294,7 +304,7 @@ int delete_station(Graph *highway, int distance) {
 
         // Check backward edges
         for (int j = 0; j < highway->stations[i].num_backward_edges; j++) {
-            if (highway->stations[i].backward_edges[j].index == index) {
+            if (highway->stations[i].backward_edges[j].distance == distance) {
                 // Shift all edges after the current one to the left
                 for (int k = j; k < highway->stations[i].num_backward_edges - 1; k++) {
                     highway->stations[i].backward_edges[k] = highway->stations[i].backward_edges[k + 1];
@@ -470,7 +480,8 @@ int* plan_route(Graph* highway, int start_distance, int end_distance, int *num_s
         
         // Iterate through all edges from the current station
         for (int i = 0; i < num_edges; i++) {
-            int ind= index_of_a_distance(highway, edges[i].distance);//PER RICAVARE CORRETTAMENTE L'INDICE DI UNA STAZIONE LA CUI DISTANZA è NOTA
+            int ind= find_station_index(highway, edges[i].distance);//PER RICAVARE CORRETTAMENTE L'INDICE DI UNA STAZIONE LA CUI DISTANZA è NOTA
+            if(ind==-1) continue;
             // If the station hasn't been visited yet
             if (visited[ind]==0) {
                 //printf("sto visitando %d", edges[i].distance);
@@ -491,7 +502,7 @@ int* plan_route(Graph* highway, int start_distance, int end_distance, int *num_s
                     // Create a list to store the path
                     int* path = (int*)malloc((*num_stations) * sizeof(int));
                     int current_station = end;
-                    int path_index = *num_stations;
+                    int path_index = *num_stations-1;
                 
                     *num_steps=0;
                     
@@ -628,7 +639,7 @@ int main() {
             if(route== NULL){
                 printf("nessun percorso\n");
             }else{
-                for (int i = num_stations-num_steps+1; i <= num_stations; i++) {
+                for (int i = num_stations-num_steps; i < num_stations; i++) {
                         printf("%d ", route[i]);
             }
             printf("\n");
