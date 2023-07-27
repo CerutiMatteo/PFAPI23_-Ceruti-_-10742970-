@@ -40,7 +40,7 @@ int lower_bound(Station *stations, int numStations, int value);
 int upper_bound(Station *stations, int numStations, int value);
 int add_car(Graph *highway, int distance, int autonomy);
 int scrap_car(Graph *highway, int distance, int autonomy);
-int* plan_route(Graph *highway, int start, int end, int* num_stations);
+int* plan_route(Graph *highway, int start, int end, int* num_stations, int* num_steps);
 int delete_station(Graph *highway, int distance);
 int delete_car(Graph *highway, int distance, int autonomy);
 void sort_edges(Station *station, int n, int forward);
@@ -56,6 +56,7 @@ int find_station_index(Graph* highway, int distance) {
     }
     return -1;  // If no station with the given distance was found
 }
+
 
 void print_graph(Graph* highway) {
     for (int i = 0; i < highway->numStations; i++) {
@@ -428,7 +429,7 @@ int add_car(Graph *highway, int distance, int car) {
     return 0;
 }
 
-int* plan_route(Graph* highway, int start_distance, int end_distance, int *num_stations) {
+int* plan_route(Graph* highway, int start_distance, int end_distance, int *num_stations, int* num_steps) {
     
     for(int i=0; i<highway->numStations; i++){
         sort_edges(&highway->stations[i],highway->stations[i].num_forward_edges,1);
@@ -460,10 +461,9 @@ int* plan_route(Graph* highway, int start_distance, int end_distance, int *num_s
 
     // Determine the direction of the travel
     int forward = start_distance <= end_distance ? 1 : 0;
-
     while (!isEmpty(queue)) {
         int current = dequeue(queue);
-
+        //printf("%d->\n",highway->stations[current].distance);
         // Determine the edges to use based on the direction
         Station* edges = forward ? highway->stations[current].forward_edges : highway->stations[current].backward_edges;
         int num_edges = forward ? highway->stations[current].num_forward_edges : highway->stations[current].num_backward_edges;
@@ -473,18 +473,18 @@ int* plan_route(Graph* highway, int start_distance, int end_distance, int *num_s
             int ind= index_of_a_distance(highway, edges[i].distance);//PER RICAVARE CORRETTAMENTE L'INDICE DI UNA STAZIONE LA CUI DISTANZA è NOTA
             // If the station hasn't been visited yet
             if (visited[ind]==0) {
-                //printf("sto visitando la stazione %d\n", edges[i].distance);
+                //printf("sto visitando %d", edges[i].distance);
                 enqueue(queue, ind);
                 //printQueue(queue);
                 
                 visited[ind] = 1;
                 prev[ind] = current;
-                //printf("stazione precedente: %d\n",highway->stations[current].distance);
-                *num_stations = *num_stations + 1;
+                //printf("PREV: %d\n",highway->stations[current].distance);
+                *num_stations = *num_stations + 1; 
 
                 // If we have reached the end station
                 if (ind == end) {
-
+                    
                     free(queue);
                     free(visited);
 
@@ -492,14 +492,18 @@ int* plan_route(Graph* highway, int start_distance, int end_distance, int *num_s
                     int* path = (int*)malloc((*num_stations) * sizeof(int));
                     int current_station = end;
                     int path_index = *num_stations;
+                
+                    *num_steps=0;
+                    
 
                     // Follow the path from the end to the start
                     while (current_station != -1) {
+                        *num_steps=*num_steps + 1;
                         path[path_index] = highway->stations[current_station].distance;
                         current_station = prev[current_station];
                         path_index--;
                     }
-
+                    
                     free(prev);
                     return path;
                 }
@@ -571,7 +575,10 @@ int main() {
             int success = add_station(highway, distance);
             if (success) {
                 char *car = strtok(autonomies, " ");
+                car = strtok(NULL, " ");
+                int a=0;
                 while (car != NULL) {
+                    if(a){}
                     int autonomy = atoi(car);
                     add_car(highway, distance, autonomy);
                     car = strtok(NULL, " ");
@@ -616,15 +623,13 @@ int main() {
         
         //PIANIFICA PERCORSO
         else if (strcmp(command, "pianifica-percorso") == 0) {
-            int num_stations = 0;
-            int *route = plan_route(highway, distance, num_cars, &num_stations);
+            int num_stations = 0; int num_steps = 0;
+            int *route = plan_route(highway, distance, num_cars, &num_stations, &num_steps);
             if(route== NULL){
                 printf("nessun percorso\n");
             }else{
-                for (int i = 0; i <= num_stations; i++) {
-                    if((route[i]>= distance && route[i]<= num_cars) || (route[i]<= distance && route[i]>= num_cars)){
+                for (int i = num_stations-num_steps+1; i <= num_stations; i++) {
                         printf("%d ", route[i]);
-                    }
             }
             printf("\n");
             }
