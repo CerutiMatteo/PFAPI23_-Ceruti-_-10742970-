@@ -61,7 +61,7 @@ int find_station_index(Graph* highway, int distance) {
 void print_graph(Graph* highway) {
     for (int i = 0; i < highway->numStations; i++) {
         Station* station = &highway->stations[i];
-        printf("Station %d (distance: %d, max car: %d):\n", i, station->distance, get_max_car(station));
+        printf("\nStation %d (distance: %d, max car: %d):\n", i, station->distance, get_max_car(station));
         printf("Forward edges: ");
         for (int j = 0; j < station->num_forward_edges; j++) {
             printf(" %d", station->forward_edges[j].distance);
@@ -439,6 +439,7 @@ int add_car(Graph *highway, int distance, int car) {
     return 0;
 }
 
+
 int* plan_route(Graph* highway, int start_distance, int end_distance, int *num_stations, int* num_steps) {
     
     for(int i=0; i<highway->numStations; i++){
@@ -516,7 +517,7 @@ int* plan_route(Graph* highway, int start_distance, int end_distance, int *num_s
                     }
                     
                     free(prev);
-                    return path;
+                    return path;  
                 }
             }
         }
