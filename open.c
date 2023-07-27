@@ -438,15 +438,13 @@ int* plan_route(Graph* highway, int start_distance, int end_distance, int *num_s
 
     // Convert distances to indices
     int start = find_station_index(highway, start_distance);
-    printf("%d\n",start);
     int end = find_station_index(highway, end_distance);
-    printf("%d\n",end);
+
     if (start == -1 || end == -1 || start==end) {
         // One of the stations was not found
         return NULL;
     }
     
-
     // Initialize visited array and previous node array
     int* visited = (int*)malloc(highway->numStations * sizeof(int));
     int* prev = (int*)malloc(highway->numStations * sizeof(int));
@@ -458,7 +456,6 @@ int* plan_route(Graph* highway, int start_distance, int end_distance, int *num_s
     // Create a queue and enqueue the start node
     Queue* queue = createQueue();
     enqueue(queue, start);
-    printQueue(queue);
     visited[start] = 1;
 
     // Determine the direction of the travel
@@ -482,7 +479,7 @@ int* plan_route(Graph* highway, int start_distance, int end_distance, int *num_s
                 
                 visited[ind] = 1;
                 prev[ind] = current;
-                printf("stazione precedente: %d\n",highway->stations[current].distance);
+                //printf("stazione precedente: %d\n",highway->stations[current].distance);
                 *num_stations = *num_stations + 1;
 
                 // If we have reached the end station
