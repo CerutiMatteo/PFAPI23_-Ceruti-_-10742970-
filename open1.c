@@ -300,7 +300,7 @@ int delete_station(Graph *highway, int distance, int* zero_is_a_station) {
     if(distance==0){
         *zero_is_a_station=0;
         free(highway->stations);
-        highway->stations = malloc(sizeof(Station));
+        highway->stations = NULL;
         highway->stations[0].distance = 0;
         highway->stations[0].num_cars = 0;
         highway->stations[0].num_forward_edges = 0;
@@ -343,6 +343,10 @@ int delete_station(Graph *highway, int distance, int* zero_is_a_station) {
             }
         }
     }
+
+    //free edges
+    if(highway->stations[index].num_forward_edges>0){free(highway->stations[index].forward_edges);}
+    if(highway->stations[index].num_backward_edges>0){free(highway->stations[index].backward_edges);}
 
     // Shift all stations after the one to be deleted to the left
     for (int i = index; i < highway->numStations - 1; i++) {
@@ -523,7 +527,7 @@ int* plan_route(Graph* highway, int start_distance, int end_distance, int *num_s
 
                     // If we have reached the end station
                     if (ind == end) {
-                        
+                        free(queue->values);
                         free(queue);
                         free(visited);
 
@@ -549,6 +553,8 @@ int* plan_route(Graph* highway, int start_distance, int end_distance, int *num_s
                 }
             }
         }
+        free(queue->values);
+        free(queue);
     
     }
 
@@ -574,6 +580,7 @@ int* plan_route(Graph* highway, int start_distance, int end_distance, int *num_s
                     prev[i]=current;
                     *num_stations=*num_stations+1;
                     if(i==start){
+                        free(queue->values);
                         free(queue);
                         free(visited);
 
@@ -600,7 +607,8 @@ int* plan_route(Graph* highway, int start_distance, int end_distance, int *num_s
             }
         }
 
-    
+        free(queue->values);
+        free(queue);
     }
     
     free(visited);
@@ -719,7 +727,8 @@ int main() {
             int num_stations = 0; int num_steps = 0;
             int *route = plan_route(highway, distance, num_cars, &num_stations, &num_steps);
             if(route== NULL){
-                printf("nessun percorso");
+                printf("nessun percorso\n");
+                continue;
             }
             if(distance<num_cars){
                 for (int i = num_stations-num_steps; i < num_stations; i++) {
@@ -737,6 +746,7 @@ int main() {
                         }
                 }
             }
+            free(route);
             printf("\n");
         }
 
@@ -747,7 +757,13 @@ int main() {
             printf("Unknown command: %s\n", command);
         }
     }
-
+    //FREE
+    for(int i=0; i<highway->numStations; i++){
+        if(highway->stations[i].num_forward_edges>0){free(highway->stations[i].forward_edges);}
+        if(highway->stations[i].num_backward_edges>0){free(highway->stations[i].backward_edges);}
+    }
+    if(highway->numStations>0){free(highway->stations);}
+    free(highway);
     free(line);
     return 0;
 }
