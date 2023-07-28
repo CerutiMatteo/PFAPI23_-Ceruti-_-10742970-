@@ -692,7 +692,7 @@ int main() {
             }
             if(distance>num_cars){
                 for (int i = num_stations-1; i >= num_stations-num_steps; i--) {
-                        printf("%d ", route[i]);
+                        printf("%d", route[i]);
                         if(i!=num_stations-num_steps){
                             printf(" ");
                         }
