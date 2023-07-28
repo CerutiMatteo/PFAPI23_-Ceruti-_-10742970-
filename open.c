@@ -3,7 +3,6 @@
 #include <string.h>
 
 #define MAX_CARS 512
-
 typedef struct Station {
     int index;
     int distance;
@@ -681,16 +680,22 @@ int main() {
             int num_stations = 0; int num_steps = 0;
             int *route = plan_route(highway, distance, num_cars, &num_stations, &num_steps);
             if(route== NULL){
-                printf("nessun percorso\n");
+                printf("nessun percorso");
             }
             if(distance<num_cars){
                 for (int i = num_stations-num_steps; i < num_stations; i++) {
-                        printf("%d ", route[i]);
+                        printf("%d", route[i]);
+                        if(i!=num_stations-1){
+                            printf(" ");
+                        }
                 }
             }
             if(distance>num_cars){
                 for (int i = num_stations-1; i >= num_stations-num_steps; i--) {
                         printf("%d ", route[i]);
+                        if(i!=num_stations-num_steps){
+                            printf(" ");
+                        }
                 }
             }
             printf("\n");
