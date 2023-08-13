@@ -188,7 +188,7 @@ void search_incoming_edges(Graph *highway, Station *station, int* visit, int* is
                 station->station_edges[station->num_edges-1].index= &highway->stations[i].index;
                 *visit= highway->stations[i].distance;
                 isEdge[highway->stations[i].index]=1;
-                //printf(" %d ",highway->stations[i].distance);
+                //printf(" %d ",highway->stations[i].index);
             }
             
         }
@@ -389,6 +389,9 @@ int* plan_route(Graph* highway, int start_distance, int end_distance, int *num_s
         }
     }else{
         int* isEdge= (int*)malloc(highway->numStations*sizeof(int));
+        for(int i=0; i<highway->numStations; i++){
+            isEdge[i]= 0;
+        }
         int visit= -1;
         for(int i=0; i< highway->numStations; i++){//scorro le stazioni
             if(start_distance== highway->stations[i].distance){
@@ -408,11 +411,14 @@ int* plan_route(Graph* highway, int start_distance, int end_distance, int *num_s
                     highway->stations[i].max_car_deleted= 0;
                 }
                 if(isEdge[highway->stations[i].index]==1){
+                    //printf("%d is edge, ",highway->stations[i].index);
                     search_incoming_edges(highway, &highway->stations[i],&visit, isEdge, start_distance);
+                    isEdge[highway->stations[i].index]= 0;
                 }
             }
         }
         free(isEdge);
+
     }
     
         
