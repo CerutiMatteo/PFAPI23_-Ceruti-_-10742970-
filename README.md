@@ -282,7 +282,7 @@ aggiunta
 
 ## Author
 
-Project developed for the **Algorithms and Data Structures** course — Academic Year **2022/2023**.
+Matteo Ceruti, Project developed for the **Algorithms and Data Structures** course — Academic Year **2022/2023**.
 
 ---
 
@@ -566,4 +566,4 @@ aggiunta
 
 ## Autore
 
-Progetto sviluppato per il corso di **Algoritmi e Strutture Dati** — Anno Accademico **2022/2023**.
+Matteo Ceruti, Progetto sviluppato per il corso di **Algoritmi e Strutture Dati** — Anno Accademico **2022/2023**.
